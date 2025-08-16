@@ -1,0 +1,8 @@
+/compile_commands.json
+/made-to-race
+/build
+/test/comm/server
+/test/comm/server.o
+/test/comm/comm.o
+/src/entry.o
+/.cache
