@@ -46,7 +46,13 @@ src += \
 	backend/graphic/vulkan/device.c \
 	backend/graphic/vulkan/swapchain.c \
 	backend/graphic/vulkan/image.c \
-	backend/graphic/vulkan/shader.c
+	backend/graphic/vulkan/shader.c \
+	backend/graphic/vulkan/pipeline_layout.c \
+	backend/graphic/vulkan/render_pass.c \
+	backend/graphic/vulkan/pipeline.c \
+	backend/graphic/vulkan/framebuffers.c \
+	backend/graphic/vulkan/command.c \
+	backend/graphic/vulkan/sync.c
 
 graphic:
 else

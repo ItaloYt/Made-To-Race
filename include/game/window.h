@@ -12,10 +12,13 @@ enum MTRWindowError {
 typedef enum MTRWindowError MTRWindowError;
 
 bool mtr_create_window(MTRWindow *window);
+bool mtr_update_window(MTRWindow window);
 void mtr_destroy_window(MTRWindow *window);
 
 unsigned mtr_get_window_width(MTRWindow window);
 unsigned mtr_get_window_height(MTRWindow window);
+
+bool mtr_is_window_closed(MTRWindow window);
 
 const char *_mtr_convert_window_error_to_string(MTRWindowError code);
 bool _mtr_throw_window_error(MTRWindowError code);

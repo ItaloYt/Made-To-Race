@@ -2,7 +2,6 @@
 
 #include <stdbool.h>
 #include <assert.h>
-#include <vulkan/vulkan_core.h>
 
 #include "backend/graphic/vulkan/vulkan.h"
 

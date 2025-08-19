@@ -34,6 +34,14 @@ bool mtr_create_window(MTRWindow *out) {
     return false;
 }
 
+bool mtr_update_window(MTRWindow window) {
+    assert(window != NULL);
+
+    if (_mtr_roundtrip_wayland_display(window->display)) return true;
+
+    return false;
+}
+
 void mtr_destroy_window(MTRWindow *window) {
     assert(window != NULL);
 
@@ -49,6 +57,7 @@ void mtr_destroy_window(MTRWindow *window) {
 
 unsigned mtr_get_window_width(MTRWindow window) { return window->surface.width; }
 unsigned mtr_get_window_height(MTRWindow window) { return window->surface.height; }
+bool mtr_is_window_closed(MTRWindow window) { return window->surface.closed; }
 
 bool _mtr_throw_wayland_error(MTRWaylandError code) {
     (void) fprintf(stderr, "Wayland Error %02x - %s\n", code, _mtr_convert_wayland_error_to_string(code));
@@ -148,7 +157,7 @@ bool _mtr_query_vulkan_surface(VkSurfaceKHR *surface, MTRWindow window, VkInstan
 }
 
 bool _mtr_query_vulkan_physical_presentation_support(bool *is_supported, VkPhysicalDevice physical, unsigned family, MTRWindow window) {
-    *is_supported = vkGetPhysicalDeviceWaylandPresentationSupportKHR(physical, family, window->display);
+    *is_supported = vkGetPhysicalDeviceWaylandPresentationSupportKHR(physical, family, window->display) == VK_TRUE;
 
     return false;
 }
