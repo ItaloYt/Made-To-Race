@@ -15,6 +15,8 @@ struct MTRGraphic {
     VkSurfaceFormatKHR format;
     VkExtent2D extent;
 
+    MTRWindow window;
+
     VkImage *images;
     VkImageView *views;
 
@@ -102,6 +104,8 @@ void _mtr_destroy_vulkan_semaphores(VkSemaphore **semaphores, VkDevice device, u
 
 bool _mtr_create_vulkan_fences(VkFence **fences, VkDevice device, unsigned count);
 void _mtr_destroy_vulkan_fences(VkFence **fences, VkDevice device, unsigned count);
+
+bool _mtr_recreate_vulkan_swapchain(MTRGraphic graphic);
 
 // TODO: add default method
 bool _mtr_query_vulkan_physical_presentation_support(bool *is_supported, VkPhysicalDevice physical, unsigned family, MTRWindow window);

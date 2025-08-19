@@ -31,13 +31,29 @@ bool mtr_create_window(MTRWindow *out) {
         return _mtr_throw_window_error(MTR_WINDOW_ERROR_IMPLEMENTATION);
     }
 
+    wl_surface_commit(window->surface.surface_wl);
+
     return false;
 }
 
 bool mtr_update_window(MTRWindow window) {
     assert(window != NULL);
 
-    if (_mtr_roundtrip_wayland_display(window->display)) return true;
+    if (window->surface.resizing) {
+        wl_surface_commit(window->surface.surface_wl);
+
+        window->surface.resizing = false;
+    }
+
+    int status;
+
+    while(1) {
+        status = wl_display_dispatch_pending(window->display);
+
+        if (status == -1) return _mtr_throw_wayland_error(MTR_WAYLAND_ERROR_ROUNDTRIP_DISPLAY);
+
+        if (status == 0) break;
+    }
 
     return false;
 }
@@ -58,6 +74,7 @@ void mtr_destroy_window(MTRWindow *window) {
 unsigned mtr_get_window_width(MTRWindow window) { return window->surface.width; }
 unsigned mtr_get_window_height(MTRWindow window) { return window->surface.height; }
 bool mtr_is_window_closed(MTRWindow window) { return window->surface.closed; }
+bool mtr_is_window_resizing(MTRWindow window) { return window->surface.resizing; }
 
 bool _mtr_throw_wayland_error(MTRWaylandError code) {
     (void) fprintf(stderr, "Wayland Error %02x - %s\n", code, _mtr_convert_wayland_error_to_string(code));

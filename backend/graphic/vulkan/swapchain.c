@@ -42,3 +42,24 @@ bool _mtr_create_vulkan_swapchain(VkSwapchainKHR *swapchain, const VkSurfaceCapa
 void _mtr_destroy_vulkan_swapchain(VkSwapchainKHR swapchain, VkDevice device) {
     vkDestroySwapchainKHR(device, swapchain, NULL);
 }
+
+bool _mtr_recreate_vulkan_swapchain(MTRGraphic graphic) {
+    (void) vkDeviceWaitIdle(graphic->device);
+
+    _mtr_destroy_vulkan_framebuffers(&graphic->base_framebuffers, graphic->device, graphic->image_count);
+    _mtr_destroy_vulkan_swapchain_views(&graphic->views, graphic->device, graphic->image_count);
+    _mtr_destroy_vulkan_swapchain_images(&graphic->images);
+    _mtr_destroy_vulkan_swapchain(graphic->swapchain, graphic->device);
+
+    if (
+        _mtr_load_vulkan_surface_capabilities(&graphic->capabilities, &graphic->extent, graphic->physical, graphic->surface, graphic->window) ||
+        _mtr_load_vulkan_surface_format(&graphic->format, graphic->physical, graphic->surface) ||
+        _mtr_load_vulkan_surface_present_mode(&graphic->mode, graphic->physical, graphic->surface) ||
+        _mtr_create_vulkan_swapchain(&graphic->swapchain, &graphic->capabilities, &graphic->format, &graphic->extent, graphic->device, graphic->surface, graphic->mode, graphic->graphic_index, graphic->present_index) ||
+        _mtr_load_vulkan_swapchain_images(&graphic->images, &graphic->image_count, graphic->swapchain, graphic->device) ||
+        _mtr_create_vulkan_swapchain_views(&graphic->views, graphic->images, graphic->device, graphic->format.format, graphic->image_count) ||
+        _mtr_create_vulkan_framebuffers(&graphic->base_framebuffers, graphic->device, graphic->base_render_pass, graphic->views, &graphic->extent, graphic->image_count)
+    ) return true;
+
+    return false;
+}

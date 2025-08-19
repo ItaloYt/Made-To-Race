@@ -151,8 +151,11 @@ bool _mtr_create_base_vulkan_pipeline(VkPipeline *pipeline, VkDevice device, VkP
             .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
             .pNext = NULL,
             .flags = 0,
-            .dynamicStateCount = 0,
-            .pDynamicStates = NULL,
+            .dynamicStateCount = 2,
+            .pDynamicStates = (VkDynamicState[]) {
+                VK_DYNAMIC_STATE_VIEWPORT,
+                VK_DYNAMIC_STATE_SCISSOR,
+            },
         },
         .layout = layout,
         .renderPass = render_pass,

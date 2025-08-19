@@ -120,6 +120,14 @@ static void xdg_configure_event(MTRWaylandSurface *surface, struct xdg_surface *
 static void toplevel_configure_event(MTRWaylandSurface *surface, struct xdg_toplevel *toplevel, int width, int height, struct wl_array *states) {
     surface->width = (width == 0 ? mtr_min_int(1000, surface->width_bound) : width);
     surface->height = (height == 0 ? mtr_min_int(700, surface->height_bound) : height);
+
+    unsigned *state;
+
+    wl_array_for_each(state, states) {
+        if (*state == XDG_TOPLEVEL_STATE_RESIZING) {
+            surface->resizing = true;
+        }
+    };
 }
 
 static void toplevel_close_event(MTRWaylandSurface *surface, struct xdg_toplevel *toplevel) {

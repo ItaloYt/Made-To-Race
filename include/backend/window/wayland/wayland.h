@@ -25,6 +25,7 @@ struct MTRWaylandSurface {
     bool closed;
     bool invalid_state;
     bool initialized;
+    bool resizing;
 };
 typedef struct MTRWaylandSurface MTRWaylandSurface;
 

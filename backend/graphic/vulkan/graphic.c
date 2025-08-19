@@ -22,6 +22,8 @@ bool mtr_create_graphic(MTRGraphic *out, MTRWindow window) {
 
     *out = graphic;
 
+    graphic->window = window;
+
     if (
         _mtr_create_vulkan_instance(&graphic->instance) ||
         _mtr_query_vulkan_surface(&graphic->surface, window, graphic->instance) ||
@@ -62,13 +64,16 @@ bool mtr_create_graphic_object(MTRGraphicObject *object, MTRGraphic graphic, MTR
 bool mtr_render_graphic(MTRGraphic graphic) {
     assert(graphic != NULL);
 
+    if (mtr_is_window_resizing(graphic->window) && _mtr_recreate_vulkan_swapchain(graphic)) return true;
+
     if (_mtr_throw_vulkan_error(vkWaitForFences(graphic->device, 1, graphic->frame_ended, VK_FALSE, -1))) return true;
 
-    if (_mtr_throw_vulkan_error(vkResetFences(graphic->device, 1, graphic->frame_ended))) return true;
-
     unsigned image_index;
-    if (_mtr_throw_vulkan_error(vkAcquireNextImageKHR(graphic->device, graphic->swapchain, -1, graphic->image_available[0], NULL, &image_index))) return true;
+    VkResult status = vkAcquireNextImageKHR(graphic->device, graphic->swapchain, -1, graphic->image_available[0], NULL, &image_index);
 
+    if (status == VK_SUBOPTIMAL_KHR || status == VK_ERROR_OUT_OF_DATE_KHR) return _mtr_recreate_vulkan_swapchain(graphic);
+    if (_mtr_throw_vulkan_error(status)) return true;
+    if (_mtr_throw_vulkan_error(vkResetFences(graphic->device, 1, graphic->frame_ended))) return true;
     if (_mtr_throw_vulkan_error(vkResetCommandBuffer(graphic->graphic_cmd, 0))) return true;
 
     VkCommandBufferBeginInfo cmd_begin_info = {
@@ -100,6 +105,24 @@ bool mtr_render_graphic(MTRGraphic graphic) {
     vkCmdBeginRenderPass(graphic->graphic_cmd, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
     vkCmdBindPipeline(graphic->graphic_cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, graphic->base_pipeline);
+
+    vkCmdSetViewport(graphic->graphic_cmd, 0, 1, (VkViewport[]) {
+        (VkViewport) {
+            .x = 0,
+            .y = 0,
+            .width = graphic->extent.width,
+            .height = graphic->extent.height,
+            .minDepth = 0,
+            .maxDepth = 1,
+        },
+    });
+
+    vkCmdSetScissor(graphic->graphic_cmd, 0, 1, (VkRect2D[]) {
+        (VkRect2D) {
+            .offset = { .x = 0, .y = 0 },
+            .extent = graphic->extent,
+        },
+    });
 
     vkCmdDraw(graphic->graphic_cmd, 3, 1, 0, 0);
 
@@ -140,7 +163,10 @@ bool mtr_render_graphic(MTRGraphic graphic) {
         .pResults = NULL,
     };
 
-    if (_mtr_throw_vulkan_error(vkQueuePresentKHR(graphic->present, &present_info))) return true;
+    status = vkQueuePresentKHR(graphic->present, &present_info);
+
+    if (status == VK_SUBOPTIMAL_KHR || status == VK_ERROR_OUT_OF_DATE_KHR) return _mtr_recreate_vulkan_swapchain(graphic);
+    if (_mtr_throw_vulkan_error(status)) return true;
 
     return false;
 }
