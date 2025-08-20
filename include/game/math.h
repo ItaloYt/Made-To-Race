@@ -1,6 +1,11 @@
 #ifndef MTR_MATH_H
 #define MTR_MATH_H
 
+struct MTRVector2 {
+    float x, y;
+};
+typedef struct MTRVector2 MTRVector2;
+
 struct MTRVector3 {
     float x, y, z;
 };

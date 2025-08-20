@@ -52,7 +52,8 @@ src += \
 	backend/graphic/vulkan/pipeline.c \
 	backend/graphic/vulkan/framebuffers.c \
 	backend/graphic/vulkan/command.c \
-	backend/graphic/vulkan/sync.c
+	backend/graphic/vulkan/sync.c \
+	backend/graphic/vulkan/buffer.c
 
 graphic:
 else
@@ -105,9 +106,9 @@ $(build)/made-to-race: $(obj)
 	$(c) -o $@ $^ $(lflags)
 
 include/game/shaders.h: $(ssrc)
-	@echo -e "#ifndef MTR_SHADERS_H\n#define MTR_SHADERS_H\n" > $@
+	@echo -e "#ifndef MTR_EMBED_SHADERS_H\n#define MTR_EMBED_SHADERS_H\n" > $@
 	@for file in $(ssrc); do \
-		name="$$(echo $$file | tr '/' '_' | tr '.' '_')_spv"; \
+		name="mtr_embed_$$(echo $$file | tr '/' '_' | tr '.' '_')_spv"; \
 		echo -e "extern const char $$name[];\nextern const unsigned $${name}_size;\n" >> $@; \
 	done
 	@echo -e "#endif\n" >> $@
@@ -115,7 +116,7 @@ include/game/shaders.h: $(ssrc)
 core/shaders.c: $(ssrc)
 	@echo -e '#include "game/shaders.h"\n' > $@
 	@for file in $(ssrc); do \
-		name="$$(echo $$file | tr '/' '_' | tr '.' '_')_spv"; \
+		name="mtr_embed_$$(echo $$file | tr '/' '_' | tr '.' '_')_spv"; \
 		content="$$(xxd -ps $(build)/$$file.spv | tr -d '\n' | sed 's/../\\\\x&/g')"; \
 		echo -e "const char $$name[] = \"$$content\";\nconst unsigned $${name}_size = sizeof($$name) - 1;\n" >> $@; \
 	done

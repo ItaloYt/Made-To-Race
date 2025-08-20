@@ -24,7 +24,7 @@ bool mtr_create_window(MTRWindow *out) {
         _mtr_validate_wayland_registry(&window->registry) ||
         _mtr_create_wayland_surface(&window->surface, window->registry.compositor, window->registry.shell, window->registry.manager) ||
         _mtr_roundtrip_wayland_display(window->display) ||
-        window->surface.invalid_state
+        window->surface.flags.invalid_state
     ) {
         mtr_destroy_window(out);
 
@@ -39,10 +39,10 @@ bool mtr_create_window(MTRWindow *out) {
 bool mtr_update_window(MTRWindow window) {
     assert(window != NULL);
 
-    if (window->surface.resizing) {
+    if (window->surface.flags.resizing) {
         wl_surface_commit(window->surface.surface_wl);
 
-        window->surface.resizing = false;
+        window->surface.flags.resizing = false;
     }
 
     int status;
@@ -73,8 +73,8 @@ void mtr_destroy_window(MTRWindow *window) {
 
 unsigned mtr_get_window_width(MTRWindow window) { return window->surface.width; }
 unsigned mtr_get_window_height(MTRWindow window) { return window->surface.height; }
-bool mtr_is_window_closed(MTRWindow window) { return window->surface.closed; }
-bool mtr_is_window_resizing(MTRWindow window) { return window->surface.resizing; }
+bool mtr_is_window_closed(MTRWindow window) { return window->surface.flags.closed; }
+bool mtr_is_window_resizing(MTRWindow window) { return window->surface.flags.resizing; }
 
 bool _mtr_throw_wayland_error(MTRWaylandError code) {
     (void) fprintf(stderr, "Wayland Error %02x - %s\n", code, _mtr_convert_wayland_error_to_string(code));

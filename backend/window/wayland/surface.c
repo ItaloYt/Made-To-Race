@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <wayland-client.h>
 
 #include <assert.h>
@@ -44,7 +45,7 @@ bool _mtr_create_wayland_surface(MTRWaylandSurface *surface, struct wl_composito
     surface->surface_wl = wl_compositor_create_surface(compositor);
     if (surface->surface_wl == NULL) return _mtr_throw_wayland_error(MTR_WAYLAND_ERROR_CREATE_SURFACE);
     
-    surface->initialized = true;
+    surface->flags.initialized = true;
 
     surface->surface_xdg = xdg_wm_base_get_xdg_surface(shell, surface->surface_wl);
     if (surface->surface_xdg == NULL) {
@@ -96,14 +97,14 @@ bool _mtr_create_wayland_surface(MTRWaylandSurface *surface, struct wl_composito
 }
 
 void _mtr_destroy_wayland_surface(MTRWaylandSurface *surface) {
-    if (surface == NULL || !surface->initialized) return;
+    if (surface == NULL || !surface->flags.initialized) return;
 
     if (surface->decoration != NULL) zxdg_toplevel_decoration_v1_destroy(surface->decoration);
     if (surface->toplevel != NULL) xdg_toplevel_destroy(surface->toplevel);
     if (surface->surface_xdg != NULL) xdg_surface_destroy(surface->surface_xdg);
     if (surface->surface_wl != NULL) wl_surface_destroy(surface->surface_wl);
 
-    surface->initialized = false;
+    surface->flags.initialized = false;
 }
 
 static void shell_ping_event(MTRWaylandSurface *surface, struct xdg_wm_base *shell, unsigned serial) {
@@ -114,6 +115,9 @@ static void xdg_configure_event(MTRWaylandSurface *surface, struct xdg_surface *
     xdg_surface_ack_configure(xdg, serial);
 
     xdg_surface_set_window_geometry(surface->surface_xdg, 0, 0, surface->width, surface->height);
+
+    xdg_toplevel_set_min_size(surface->toplevel, surface->width, surface->height);
+    xdg_toplevel_set_max_size(surface->toplevel, surface->width, surface->height);
 }
 
 // TODO: Check for states
@@ -121,17 +125,39 @@ static void toplevel_configure_event(MTRWaylandSurface *surface, struct xdg_topl
     surface->width = (width == 0 ? mtr_min_int(1000, surface->width_bound) : width);
     surface->height = (height == 0 ? mtr_min_int(700, surface->height_bound) : height);
 
-    unsigned *state;
-
-    wl_array_for_each(state, states) {
-        if (*state == XDG_TOPLEVEL_STATE_RESIZING) {
-            surface->resizing = true;
-        }
-    };
+    // enum xdg_toplevel_state *state;
+    //
+    // bool new_fullscreen = false;
+    // bool new_maximized = false;
+    // bool new_resizing = false;
+    //
+    // wl_array_for_each(state, states) {
+    //     if (*state == XDG_TOPLEVEL_STATE_FULLSCREEN) {
+    //         new_fullscreen = true;
+    //
+    //         continue;
+    //     }
+    //
+    //     if (*state == XDG_TOPLEVEL_STATE_MAXIMIZED) {
+    //         new_maximized = true;
+    //
+    //         continue;
+    //     }
+    //
+    //     if (*state == XDG_TOPLEVEL_STATE_RESIZING) {
+    //         new_resizing = true;
+    //
+    //         continue;
+    //     }
+    //
+    //     (void) printf("%d\n", *state);
+    // };
+    //
+    // if (new_resizing || (new_fullscreen != surface->flags.fullscreen) || ())
 }
 
 static void toplevel_close_event(MTRWaylandSurface *surface, struct xdg_toplevel *toplevel) {
-    surface->closed = true;
+    surface->flags.closed = true;
 }
 
 static void toplevel_configure_bounds_event(MTRWaylandSurface *surface, struct xdg_toplevel *toplevel, int width, int height) {
@@ -146,7 +172,7 @@ static void toplevel_wmcapabilities_event(MTRWaylandSurface *surface, struct xdg
 
 static void decoration_configure_event(MTRWaylandSurface *surface, struct zxdg_toplevel_decoration_v1 *decoration, unsigned mode) {
     if (mode == ZXDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE) {
-        surface->invalid_state = true;
+        surface->flags.invalid_state = true;
 
         _mtr_throw_wayland_error(MTR_WAYLAND_ERROR_EXPECTED_SERVER_SIDE_DECORATION);
     }

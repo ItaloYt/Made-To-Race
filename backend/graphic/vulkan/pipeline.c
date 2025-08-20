@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "backend/graphic/vulkan/vulkan.h"
+#include "game/math.h"
 
 bool _mtr_create_base_vulkan_pipeline(VkPipeline *pipeline, VkDevice device, VkPipelineLayout layout, VkRenderPass render_pass, VkShaderModule vertex, VkShaderModule fragment, const VkExtent2D *extent) {
     assert(pipeline != NULL);
@@ -43,10 +44,23 @@ bool _mtr_create_base_vulkan_pipeline(VkPipeline *pipeline, VkDevice device, VkP
             .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
             .pNext = NULL,
             .flags = 0,
-            .vertexBindingDescriptionCount = 0,
-            .pVertexBindingDescriptions = NULL,
-            .vertexAttributeDescriptionCount = 0,
-            .pVertexAttributeDescriptions = NULL,
+            .vertexBindingDescriptionCount = 1,
+            .pVertexBindingDescriptions = (VkVertexInputBindingDescription[]) {
+                (VkVertexInputBindingDescription) {
+                    .binding = 0,
+                    .stride = sizeof(MTRVector3),
+                    .inputRate = VK_VERTEX_INPUT_RATE_VERTEX,
+                },
+            },
+            .vertexAttributeDescriptionCount = 1,
+            .pVertexAttributeDescriptions = (VkVertexInputAttributeDescription[]) {
+                (VkVertexInputAttributeDescription) {
+                    .location = 0,
+                    .binding = 0,
+                    .format = VK_FORMAT_R32G32B32_SFLOAT,
+                    .offset = 0,
+                },
+            },
         },
         .pInputAssemblyState = &(VkPipelineInputAssemblyStateCreateInfo) {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,

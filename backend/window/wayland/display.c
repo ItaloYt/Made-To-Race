@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <wayland-client-core.h>
 #include <wayland-client.h>
 

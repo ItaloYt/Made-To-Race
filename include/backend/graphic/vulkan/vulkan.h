@@ -10,6 +10,15 @@
 
 #define MTR_VULKAN_FRAMES_IN_FLIGHT 1
 
+struct MTRGraphicObject {
+    VkBuffer mesh_buffer;
+    VkDeviceMemory mesh_memory;
+    VkBuffer index_buffer;
+    VkDeviceMemory index_memory;
+
+    unsigned count;
+};
+
 struct MTRGraphic {
     VkSurfaceCapabilitiesKHR capabilities;
     VkSurfaceFormatKHR format;
@@ -29,6 +38,7 @@ struct MTRGraphic {
     VkSwapchainKHR swapchain;
     VkCommandPool graphic_pool;
     VkCommandBuffer graphic_cmd;
+    VkCommandBuffer extra_cmd;
 
     VkShaderModule base_vertex;
     VkShaderModule base_fragment;
@@ -52,6 +62,7 @@ enum MTRVulkanAppError {
     MTR_VULKAN_APP_ERROR_NO_GRAPHIC_FAMILY = 0x01,
     MTR_VULKAN_APP_ERROR_NO_PRESENT_FAMILY = 0x02,
     MTR_VULKAN_APP_ERROR_ALLOCATE = 0x03,
+    MTR_VULKAN_APP_ERROR_MEMORY_FLAGS_NOT_FOUND = 0x04,
 };
 typedef enum MTRVulkanAppError MTRVulkanAppError;
 
@@ -105,7 +116,16 @@ void _mtr_destroy_vulkan_semaphores(VkSemaphore **semaphores, VkDevice device, u
 bool _mtr_create_vulkan_fences(VkFence **fences, VkDevice device, unsigned count);
 void _mtr_destroy_vulkan_fences(VkFence **fences, VkDevice device, unsigned count);
 
-bool _mtr_recreate_vulkan_swapchain(MTRGraphic graphic);
+bool _mtr_recreate_vulkan_swapchain(VkSwapchainKHR *swapchain, VkFramebuffer **framebuffers, VkImageView **views, VkImage **images, unsigned *image_count, VkSurfaceCapabilitiesKHR *capabilities, VkExtent2D *extent, VkSurfaceFormatKHR *format, VkPresentModeKHR *mode, VkDevice device, VkPhysicalDevice physical, VkSurfaceKHR surface, VkRenderPass render_pass, MTRWindow window, unsigned graphic_index, unsigned present_index);
+
+bool _mtr_create_vulkan_buffer(VkBuffer *buffer, VkDevice device, VkBufferUsageFlags usage, unsigned size);
+void _mtr_destroy_vulkan_buffer(VkBuffer buffer, VkDevice device);
+
+bool _mtr_create_vulkan_buffer_memory(VkDeviceMemory *memory, VkDevice device, VkBuffer buffer, VkPhysicalDevice physical, VkMemoryPropertyFlags flags);
+void _mtr_destroy_vulkan_memory(VkDeviceMemory memory, VkDevice device);
+
+bool _mtr_copy_vulkan_buffers(VkBuffer dst, VkBuffer src, VkDevice device, VkCommandBuffer cmd, VkQueue queue, unsigned size);
+bool _mtr_create_staged_vulkan_buffer(VkBuffer *buffer, VkDeviceMemory *memory, VkDevice device, VkPhysicalDevice physical, VkCommandBuffer cmd, VkQueue queue, VkBufferUsageFlags usage, VkMemoryPropertyFlags flags, const void *data, unsigned size);
 
 // TODO: add default method
 bool _mtr_query_vulkan_physical_presentation_support(bool *is_supported, VkPhysicalDevice physical, unsigned family, MTRWindow window);

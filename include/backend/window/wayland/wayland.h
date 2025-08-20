@@ -14,6 +14,20 @@ struct MTRWaylandRegistry {
 };
 typedef struct MTRWaylandRegistry MTRWaylandRegistry;
 
+union MTRWaylandSurfaceFlags {
+    unsigned char flags;
+
+    struct {
+        bool closed: 1;
+        bool invalid_state: 1;
+        bool initialized: 1;
+        bool resizing: 1;
+        // bool fullscreen: 1;
+        // bool maximized: 1;
+    };
+};
+typedef union MTRWaylandSurfaceFlags MTRWaylandSurfaceFlags;
+
 struct MTRWaylandSurface {
     struct wl_surface *surface_wl;
     struct xdg_surface *surface_xdg;
@@ -22,10 +36,8 @@ struct MTRWaylandSurface {
 
     unsigned width, width_bound;
     unsigned height, height_bound;
-    bool closed;
-    bool invalid_state;
-    bool initialized;
-    bool resizing;
+
+    MTRWaylandSurfaceFlags flags;
 };
 typedef struct MTRWaylandSurface MTRWaylandSurface;
 

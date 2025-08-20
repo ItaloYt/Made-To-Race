@@ -4,7 +4,6 @@
 #include <assert.h>
 
 #include "backend/graphic/vulkan/vulkan.h"
-#include "game/graphic.h"
 
 bool _mtr_create_vulkan_command_pool(VkCommandPool *pool, VkDevice device, unsigned queue_index) {
     assert(pool != NULL);
